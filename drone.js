@@ -95,6 +95,8 @@ class Drone{
         this.regulator = regulator;
         this.color = color;
         this.target = [0,0,0,0,0,0];
+        this.settled = new Date();
+        this.settlingTime = Infinity;
 
         this.integrator = [];
         for(let i=0;i<integrators ?? 0;++i){
@@ -108,6 +110,8 @@ class Drone{
         this.wind = new Vec2();
         this.g = new Vec2(0,-9.81);
         this.target = [0,0,0,0,0,0];
+        this.settled = new Date();
+        this.settlingTime = Infinity;
     }
     setTarget(px, py, vx, vy, a, w){
         this.target = [px,py,vx,vy,a,w];
@@ -117,6 +121,22 @@ class Drone{
             let e = [-this.pos.x,-this.pos.y,-this.vel.x,-this.vel.y,-this.pos.r,-this.vel.r];
             for(let i=0;i<e.length;++i){
                 e[i] += this.target[i];
+            }
+            let es = [e[0]*10, e[1]*10, e[2]*100, e[3]*100, e[4]*180/Math.pi, e[5]*180/Math.PI];
+            let norm1 = 0;
+            for(let dimension of es){
+                if(Math.abs(dimension) > norm1){
+                    norm1 = Math.abs(dimension);
+                }
+            }
+            if(norm1 < 1){
+                let now = new Date();
+                let time = now - this.settled;
+                if(time > 100){
+                    console.log(e,time);
+                    this.settlingTime = time;
+                }
+                this.settled = now;
             }
             let powers = this.regulator(e, this.pos.r, this.power*2/this.mass);
             let left = powers[0]/2.0 + powers[1]/2.0;
@@ -146,19 +166,6 @@ class Drone{
     //        -0.8763    0.4818   -1.7340    1.2095  -12.5180   -5.0891
     //     */
     //     switch(this.regulator){
-    //     case "LQR1":{
-    //         T =  0*d[0] +1*d[1] +0*d[2]      +1.7321*d[3] +0*d[4]       +0*d[5];
-    //         D = -1*d[0] +0*d[1] -1.9383*d[2] +0*d[3]      -13.5088*d[4] -5.2903*d[5];
-    //         T+=4.905;
-    //         T = Math.max(Math.min(T, this.power*0.75), this.power*0.1);
-    //         D = Math.max(Math.min(D, this.power*0.5), -this.power*0.5);
-    //         let t = this.pos.r / (Math.PI/4);
-    //         if(Math.abs(t)>1){
-    //             let tr = Math.min(Math.abs(t)-1,1);
-    //             T = (1-tr)*T + tr*0.5*this.power;
-    //             D = (1-tr)*D + (t>0?tr:-tr)*this.power;
-    //         }
-    //     }break;
     //     case "LQR3":{
     //         let kT = [
     //             [-0.4818, 0.8763,-0.6716, 1.6877,-2.2270,-0.3709],
@@ -248,12 +255,13 @@ class Drone{
         ctx.fill();
         ctx.setTransform(transform);
     }
-    display(posDisp, velDisp, rotDisp, rotvDisp, windDisp, contDisp){
-        posDisp.innerText = "Pos: "+this.pos.str();
-        velDisp.innerText = "Vel: "+this.vel.str();
-        rotDisp.innerText = "Rot: "+Math.round(this.pos.r*18000/Math.PI)/100;
-        rotvDisp.innerText = "RotV: "+Math.round(this.vel.r*18000/Math.PI)/100;
-        windDisp.innerText = "Wind: "+this.wind.str();
-        contDisp.innerText = "Control: "+Math.round(this.powL*10000)/10000 + ", " + Math.round(this.powR*10000)/10000;
+    display(posDisp, velDisp, rotDisp, rotvDisp, windDisp, contDisp, settlingDisp){
+        posDisp.innerHTML = "Pos: "+this.pos.str();
+        velDisp.innerHTML = "Vel: "+this.vel.str();
+        rotDisp.innerHTML = "Rot: "+Math.round(this.pos.r*18000/Math.PI)/100 + "&deg;";
+        rotvDisp.innerHTML = "RotV: "+Math.round(this.vel.r*18000/Math.PI)/100 + "&deg;/s";
+        windDisp.innerHTML = "Wind: "+this.wind.str();
+        contDisp.innerHTML = "Control: "+Math.round(this.powL*10000)/10000 + ", " + Math.round(this.powR*10000)/10000;
+        settlingDisp.innerHTML = "Settling Time: "+(this.settlingTime===Infinity ? "&infin;" : this.settlingTime) + "ms";
     }
 }

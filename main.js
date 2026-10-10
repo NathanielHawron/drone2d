@@ -7,6 +7,7 @@ const rotDisp = document.getElementById("rot");
 const rotvDisp = document.getElementById("rotV");
 const windDisp = document.getElementById("wind");
 const contDisp = document.getElementById("cont");
+const settlingDisp = document.getElementById("sett");
 
 const targetPX = document.getElementById("tpx");
 const targetPY = document.getElementById("tpy");
@@ -16,9 +17,11 @@ const targetA = document.getElementById("ta");
 const targetW = document.getElementById("tw");
 
 const updateButton = document.getElementById("updateTarget");
+const updateAllButton = document.getElementById("updateAllTarget");
 
 const droneSelectSlider = document.getElementById("droneSelect");
 const droneResetButton = document.getElementById("resetDrone");
+const droneResetAllButton = document.getElementById("resetAllDrone");
 
 
 window.onresize = ()=>{
@@ -79,24 +82,44 @@ updateButton.onclick = ()=>{
         mainDrone.setTarget(...targets);
     }
 }
+updateAllButton.onclick = ()=>{
+    targets[0] = Number.parseFloat(targetPX.value) || 0;
+    targets[1] = Number.parseFloat(targetPY.value) || 0;
+    targets[2] = Number.parseFloat(targetVX.value) || 0;
+    targets[3] = Number.parseFloat(targetVY.value) || 0;
+    targets[4] = Number.parseFloat(targetA.value) || 0;
+    targets[5] = Number.parseFloat(targetW.value) || 0;
+
+    for(let drone of drones){
+        drone.setTarget(...targets);
+    }
+}
 droneResetButton.onclick = ()=>{
     let mainDrone = drones[droneSelect];
     if(mainDrone != undefined){
         mainDrone.reset();
     }
 }
-droneSelectSlider.onchange = ()=>{
+droneResetAllButton.onclick = ()=>{
+    for(let drone of drones){
+        drone.reset();
+    }
+}
+droneSelectSlider.oninput = ()=>{
     droneSelectSlider.max = drones.length-1;
-    droneSelect = droneSelectSlider.value;
-    let mainDrone = drones[droneSelect];
+    let mainDrone = drones[droneSelectSlider.value];
     if(mainDrone != undefined){
         droneSelectSlider.style.accentColor = mainDrone.color;
     }
 }
+droneSelectSlider.onchange = ()=>{
+    droneSelect = droneSelectSlider.value;
+}
 let subframes = 1;
 setInterval(()=>{
     ctx.resetTransform();
-    ctx.clearRect(0,0,fpv.width,fpv.height);
+    ctx.fillStyle = "white";
+    ctx.fillRect(0,0,fpv.width,fpv.height);
     ctx.translate(fpv.width*0.5, fpv.height*0.5);
     ctx.scale(fpv.height*0.5*scale,-fpv.height*0.5*scale);
     
@@ -117,6 +140,6 @@ setInterval(()=>{
     }
     let mainDrone = drones[droneSelect];
     if(mainDrone != undefined){
-        mainDrone.display(posDisp, velDisp, rotDisp, rotvDisp, windDisp, contDisp);
+        mainDrone.display(posDisp, velDisp, rotDisp, rotvDisp, windDisp, contDisp, settlingDisp);
     }
 },10);
