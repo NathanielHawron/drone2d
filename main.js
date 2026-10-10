@@ -98,7 +98,7 @@ setInterval(()=>{
     ctx.resetTransform();
     ctx.clearRect(0,0,fpv.width,fpv.height);
     ctx.translate(fpv.width*0.5, fpv.height*0.5);
-    ctx.scale(fpv.width*0.5*scale,-fpv.height*0.5*scale);
+    ctx.scale(fpv.height*0.5*scale,-fpv.height*0.5*scale);
     
     let now = new Date();
     let dt = Math.min((now - prevTime)/1000, 0.1);

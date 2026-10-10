@@ -118,9 +118,9 @@ class Drone{
             for(let i=0;i<e.length;++i){
                 e[i] += this.target[i];
             }
-            let powers = this.regulator(e, this.pos.r);
-            let left = powers[0]/2.0 - powers[1]/2.0;
-            let right = powers[0]/2.0 + powers[1]/2.0;
+            let powers = this.regulator(e, this.pos.r, this.power*2/this.mass);
+            let left = powers[0]/2.0 + powers[1]/2.0;
+            let right = powers[0]/2.0 - powers[1]/2.0;
 
             if(typeof(powers) === typeof([])){
                 this.control(left*this.mass, right*this.mass);
@@ -254,6 +254,6 @@ class Drone{
         rotDisp.innerText = "Rot: "+Math.round(this.pos.r*18000/Math.PI)/100;
         rotvDisp.innerText = "RotV: "+Math.round(this.vel.r*18000/Math.PI)/100;
         windDisp.innerText = "Wind: "+this.wind.str();
-        contDisp.innerText = "Control: "+this.powL + ", " + this.powR;
+        contDisp.innerText = "Control: "+Math.round(this.powL*10000)/10000 + ", " + Math.round(this.powR*10000)/10000;
     }
 }
