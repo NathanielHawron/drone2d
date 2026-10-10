@@ -15,15 +15,23 @@ const targetVY = document.getElementById("tvy");
 const targetA = document.getElementById("ta");
 const targetW = document.getElementById("tw");
 
+const updateButton = document.getElementById("updateTarget");
+
+const droneSelectSlider = document.getElementById("droneSelect");
+const droneResetButton = document.getElementById("resetDrone");
+
+
 window.onresize = ()=>{
     fpv.width = fpv.clientWidth;
     fpv.height = fpv.clientHeight;
 }
 window.onresize();
 
-let drone1 = new Drone(new Vec2(1,0.2), 1, new Vec2(), 20, new Vec2(0.5,0.2), "LQR3", "black");
-let drone2 = new Drone(new Vec2(1,0.2), 1, new Vec2(), 20, new Vec2(0.5,0.2), "LQR1", "goldenrod");
-let drone3 = new Drone(new Vec2(1,0.2), 1, new Vec2(), 20, new Vec2(0.5,0.2), "LQI1", "firebrick");
+let drones = [];
+let droneSelect = 0;
+// let drone1 = new Drone(new Vec2(1,0.2), 1, new Vec2(), 20, new Vec2(0.5,0.2), "LQR3", "black");
+// let drone2 = new Drone(new Vec2(1,0.2), 1, new Vec2(), 20, new Vec2(0.5,0.2), "LQR1", "goldenrod");
+// let drone3 = new Drone(new Vec2(1,0.2), 1, new Vec2(), 20, new Vec2(0.5,0.2), "LQI1", "firebrick");
 
 let prevTime = new Date();
 
@@ -58,7 +66,33 @@ document.onkeyup = (e)=>{
         }break;
     }
 }*/
+updateButton.onclick = ()=>{
+    targets[0] = Number.parseFloat(targetPX.value) || 0;
+    targets[1] = Number.parseFloat(targetPY.value) || 0;
+    targets[2] = Number.parseFloat(targetVX.value) || 0;
+    targets[3] = Number.parseFloat(targetVY.value) || 0;
+    targets[4] = Number.parseFloat(targetA.value) || 0;
+    targets[5] = Number.parseFloat(targetW.value) || 0;
 
+    let mainDrone = drones[droneSelect];
+    if(mainDrone != undefined){
+        mainDrone.setTarget(...targets);
+    }
+}
+droneResetButton.onclick = ()=>{
+    let mainDrone = drones[droneSelect];
+    if(mainDrone != undefined){
+        mainDrone.reset();
+    }
+}
+droneSelectSlider.onchange = ()=>{
+    droneSelectSlider.max = drones.length-1;
+    droneSelect = droneSelectSlider.value;
+    let mainDrone = drones[droneSelect];
+    if(mainDrone != undefined){
+        droneSelectSlider.style.accentColor = mainDrone.color;
+    }
+}
 let subframes = 1;
 setInterval(()=>{
     ctx.resetTransform();
@@ -70,24 +104,19 @@ setInterval(()=>{
     let dt = Math.min((now - prevTime)/1000, 0.1);
     prevTime = now;
 
-    targets[0] = Number.parseFloat(targetPX.value) || 0;
-    targets[1] = Number.parseFloat(targetPY.value) || 0;
-    targets[2] = Number.parseFloat(targetVX.value) || 0;
-    targets[3] = Number.parseFloat(targetVY.value) || 0;
-    targets[4] = Number.parseFloat(targetA.value) || 0;
-    targets[5] = Number.parseFloat(targetW.value) || 0;
 
     let sdt = dt/subframes;
     for(let i=0;i<subframes;++i){
-        drone1.regulate(...targets, sdt);
-        drone1.update(sdt);
-        drone2.regulate(...targets, sdt);
-        drone2.update(sdt);
-        drone3.regulate(...targets, sdt);
-        drone3.update(sdt);
+        for(drone of drones){
+            drone.regulate();
+            drone.update(sdt);
+        }
     }
-    drone1.render(ctx);
-    drone2.render(ctx);
-    drone3.render(ctx);
-    drone3.display(posDisp, velDisp, rotDisp, rotvDisp, windDisp, contDisp);
+    for(drone of drones){
+        drone.render(ctx);
+    }
+    let mainDrone = drones[droneSelect];
+    if(mainDrone != undefined){
+        mainDrone.display(posDisp, velDisp, rotDisp, rotvDisp, windDisp, contDisp);
+    }
 },10);

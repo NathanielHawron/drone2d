@@ -2,35 +2,38 @@
     <head>
         <title>Drone2D</title>
         <style>
-            h1{
-                position:absolute;
-                left:0;
-            }
-            label{
-                position:absolute;
-                left:0;
-            }
-            input{
-                position:absolute;
-                left:5vw;
+            .flex-container{
+                display: flex;
+                justify-content: space-evenly;
+                flex-direction: column;
             }
         </style>
     </head>
     <body styls="width:100%;height:100%;margin:0">
         <canvas id="fpv" style="width:100%;height:100%;position:absolute;left:0;top:0"></canvas>
-        <h1 id="pos" style="top:0%">Pos</h1>
-        <h1 id="vel" style="top:5%">Vel</h1>
-        <h1 id="rot" style="top:10%">Rot</h1>
-        <h1 id="rotV" style="top:15%">RotV</h1>
-        <h1 id="wind" style="top:20%">Wind</h1>
-        <h1 id="cont" style="top:25%">Control</h1>
-        <label for="tpx" style="top:35%">Target px:</label><input id="tpx" style="top:35%" value="0">
-        <label for="tpy" style="top:38%">Target py:</label><input id="tpy" style="top:38%" value="0">
-        <label for="tvx" style="top:41%">Target vx:</label><input id="tvx" style="top:41%" value="0">
-        <label for="tvy" style="top:44%">Target vy:</label><input id="tvy" style="top:44%" value="0">
-        <label for="ta" style="top:47%">Target a:</label><input id="ta" style="top:47%" value="0">
-        <label for="tw" style="top:50%">Target w:</label><input id="tw" style="top:50%" value="0">
-        <script src="drone.js"></script>
-        <script src="main.js"></script>
+        <div id="flex-container">
+            <h1 id="pos">Pos</h1>
+            <h1 id="vel">Vel</h1>
+            <h1 id="rot">Rot</h1>
+            <h1 id="rotV">RotV</h1>
+            <h1 id="wind">Wind</h1>
+            <h1 id="cont">Control</h1>
+        </div>
+        <div class="flex-container" style="position:absolute;right: 0;top: 0;">
+            <label for="tpx">Target px:</label><input id="tpx" value="0">
+            <label for="tpy">Target py:</label><input id="tpy" value="0">
+            <label for="tvx">Target vx:</label><input id="tvx" value="0">
+            <label for="tvy">Target vy:</label><input id="tvy" value="0">
+            <label for="ta">Target a:</label><input id="ta" value="0">
+            <label for="tw">Target w:</label><input id="tw" value="0">
+            <button id="updateTarget">Update</button>
+        </div>
+        <div class="flex-container" style="position:absolute;left:0;bottom:0">
+            <input  id="droneSelect" type="range" min="0">
+            <button id="resetDrone">Reset Drone</button>
+        </div>
+        <script src="./drone.js"></script>
+        <script src="./main.js"></script>
+        <script src="./drone_lqr_0.js"></script>
     </body>
 </html>
