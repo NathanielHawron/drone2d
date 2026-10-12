@@ -32,13 +32,11 @@ window.onresize();
 
 let drones = [];
 let droneSelect = 0;
-// let drone1 = new Drone(new Vec2(1,0.2), 1, new Vec2(), 20, new Vec2(0.5,0.2), "LQR3", "black");
-// let drone2 = new Drone(new Vec2(1,0.2), 1, new Vec2(), 20, new Vec2(0.5,0.2), "LQR1", "goldenrod");
-// let drone3 = new Drone(new Vec2(1,0.2), 1, new Vec2(), 20, new Vec2(0.5,0.2), "LQI1", "firebrick");
 
 let prevTime = new Date();
 
 let scale = 0.02;
+let maxdt = 0.1;
 
 let targets = [];
 
@@ -115,7 +113,7 @@ droneSelectSlider.oninput = ()=>{
 droneSelectSlider.onchange = ()=>{
     droneSelect = droneSelectSlider.value;
 }
-let subframes = 1;
+let subframes = 10;
 setInterval(()=>{
     ctx.resetTransform();
     ctx.fillStyle = "white";
@@ -124,14 +122,14 @@ setInterval(()=>{
     ctx.scale(fpv.height*0.5*scale,-fpv.height*0.5*scale);
     
     let now = new Date();
-    let dt = Math.min((now - prevTime)/1000, 0.1);
+    let dt = Math.min((now - prevTime)/1000, maxdt);
     prevTime = now;
 
 
     let sdt = dt/subframes;
     for(let i=0;i<subframes;++i){
         for(drone of drones){
-            drone.regulate();
+            drone.regulate(dt);
             drone.update(sdt);
         }
     }

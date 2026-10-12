@@ -116,27 +116,31 @@ class Drone{
     setTarget(px, py, vx, vy, a, w){
         this.target = [px,py,vx,vy,a,w];
     }
-    regulate(){
+    regulate(dt){
         if(typeof(this.regulator) === typeof(()=>{})){
             let e = [-this.pos.x,-this.pos.y,-this.vel.x,-this.vel.y,-this.pos.r,-this.vel.r];
             for(let i=0;i<e.length;++i){
                 e[i] += this.target[i];
             }
-            let es = [e[0]*10, e[1]*10, e[2]*100, e[3]*100, e[4]*180/Math.pi, e[5]*180/Math.PI];
-            let norm1 = 0;
-            for(let dimension of es){
-                if(Math.abs(dimension) > norm1){
-                    norm1 = Math.abs(dimension);
+            if(dt < maxdt){
+                let es = [e[0]*10, e[1]*10, e[2]*100, e[3]*100, e[4]*180/Math.pi, e[5]*180/Math.PI];
+                let norm1 = 0;
+                for(let dimension of es){
+                    if(Math.abs(dimension) > norm1){
+                        norm1 = Math.abs(dimension);
+                    }
                 }
-            }
-            if(norm1 < 1){
-                let now = new Date();
-                let time = now - this.settled;
-                if(time > 100){
-                    console.log(e,time);
-                    this.settlingTime = time;
+                if(norm1 < 1){
+                    let now = new Date();
+                    let time = now - this.settled;
+                    if(time > 100){
+                        console.log(e,time);
+                        this.settlingTime = time;
+                    }
+                    this.settled = now;
                 }
-                this.settled = now;
+            }else{
+                this.settled = new Date();
             }
             let powers = this.regulator(e, this.pos.r, this.power*2/this.mass);
             let left = powers[0]/2.0 + powers[1]/2.0;
@@ -147,83 +151,6 @@ class Drone{
             }
         }
     }
-    // regulate(px, py, vx, vy, a, w, dt){
-    //     let d = [px - this.pos.x, py - this.pos.y, vx - this.vel.x, vy - this.vel.y, a - this.pos.r, w - this.vel.r];
-    //     this.integrator[0] += d[0]*dt;
-    //     this.integrator[1] += d[1]*dt;
-    //     this.integrator[2] += d[4]*dt;
-
-    //     let T = 0; let D = 0;
-    //     /*
-    //     -pi/4 rad
-    //        -0.4818    0.8763   -0.6716    1.6877   -2.2270   -0.3709
-    //        -0.8763   -0.4818   -1.7340   -1.2095  -12.5180   -5.0891
-    //     0 rad
-    //         0         1.0000    0         1.7321  0           0
-    //        -1.0000    0        -1.9383    0       -13.5088   -5.2932
-    //     pi/4 rad
-    //         0.4818    0.8763    0.6716    1.6877    2.2270    0.3709
-    //        -0.8763    0.4818   -1.7340    1.2095  -12.5180   -5.0891
-    //     */
-    //     switch(this.regulator){
-    //     case "LQR3":{
-    //         let kT = [
-    //             [-0.4818, 0.8763,-0.6716, 1.6877,-2.2270,-0.3709],
-    //             [0,       1,      0,      1.7321, 0,      0     ],
-    //             [0.4818,  0.8763, 0.6716, 1.6877, 2.2270, 0.3709]
-    //         ];
-    //         let kD = [
-    //             [-0.8763,-0.4818,-1.7340,-1.2095,-12.5180,-5.0891],
-    //             [-1,      0,     -1.9383, 0,     -13.5088,-5.2932],
-    //             [-0.8763, 0.4818,-1.7340, 1.2095,-12.5180,-5.0891]
-    //         ];
-    
-    //         let t = this.pos.r / (Math.PI/4);
-    //         let W = [Math.max(Math.min(-0.5*t+0.5*t*t,0),1), Math.max(Math.min(1-t*t,0),1), Math.max(Math.min(0.5*t+0.5*t*t,0),1)];
-            
-    //         for(let i=0;i<6;++i){
-    //             for(let j=0;j<3;++j){
-    //                 T += d[i] * kT[j][i]*W[j];
-    //                 D += d[i] * kD[j][i]*W[j];
-    //             }
-    //         }
-   
-    //         T+=4.905;
-    
-    //         T = Math.max(Math.min(T, this.power*0.75), this.power*0.1);
-    //         D = Math.max(Math.min(D, this.power*0.5), -this.power*0.5);
-
-    //         if(Math.abs(t)>1){
-    //             let tr = Math.min(Math.abs(t)-1,1);
-    //             T = (1-tr)*T + tr*0.5*this.power;
-    //             D = (1-tr)*D + (t>0?tr:-tr)*this.power;
-    //         }
-    //     }break;
-    //     case "LQI1":{
-    //         /*
-    //             0       2.4142  0       2.4142  0         0       0      1.0000
-    //            -2.6666  0      -3.0555  0      -17.5721  -6.0120 -1.0000 0
-    //         */
-    //         T =  0*d[0]     +2.4142*d[1]+0*d[2]      +2.4142*d[3] +0*d[4]       +0*d[5];
-    //         D = -2.6666*d[0]+0*d[1]     -3.0555*d[2] +0*d[3]      -17.5721*d[4] -6.0120*d[5];
-            
-    //         T += Math.min(Math.max(0*this.integrator[0] + 1*this.integrator[1], 0),20);
-    //         D += Math.min(Math.max(-1*this.integrator[0] + 0*this.integrator[1], -20),20);
-
-    //         T+=4.905;
-    //         T = Math.max(Math.min(T, this.power*0.75), this.power*0.1);
-    //         D = Math.max(Math.min(D, this.power*0.25), -this.power*0.25);
-    //         let t = this.pos.r / (Math.PI/4);
-    //         if(Math.abs(t)>1){
-    //             let tr = Math.min(Math.abs(t)-1,1);
-    //             T = (1-tr)*T + tr*0.5*this.power;
-    //             D = (1-tr)*D + (t>0?tr:-tr)*this.power;
-    //         }
-    //     }break;
-    //     }
-        
-    //     this.control(T-D, T+D)
-    // }
     control(powL, powR){
         this.powL = Math.max(Math.min(powL ?? this.powL, this.power),0);
         this.powR = Math.max(Math.min(powR ?? this.powR, this.power),0);
@@ -262,6 +189,8 @@ class Drone{
         rotvDisp.innerHTML = "RotV: "+Math.round(this.vel.r*18000/Math.PI)/100 + "&deg;/s";
         windDisp.innerHTML = "Wind: "+this.wind.str();
         contDisp.innerHTML = "Control: "+Math.round(this.powL*10000)/10000 + ", " + Math.round(this.powR*10000)/10000;
-        settlingDisp.innerHTML = "Settling Time: "+(this.settlingTime===Infinity ? "&infin;" : this.settlingTime) + "ms";
+        let now = new Date();
+        let time = now - this.settled;
+        settlingDisp.innerHTML = "Settling Time: "+(this.settlingTime===Infinity ? "&infin;" : this.settlingTime) + "ms" + (time>100?"*":"");
     }
 }
